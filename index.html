@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hassan Tourism AI Assistant</title>
+
+  <!-- Marked.js for markdown rendering — retained as required -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Premium type pairing: Playfair Display (heritage display) + DM Sans (clean body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+   
+    :root {
+      --forest-deep:   #071e13;
+      --forest-dark:   #0d3625;
+      --forest-mid:    #114232;
+      --forest-rich:   #1a5c44;
+      --moss:          #2c6e49;
+      --jade:          #4f8c6a;
+      --mist:          #8ebfa2;
+      --cream:         #f3efe6;
+      --parchment:     #e8e1d4;
+      --bark:          #c2a87c;
+      --gold:          #d4a943;
+      --white:         #ffffff;
+
+      --glass-bg:      rgba(7, 30, 19, 0.72);
+      --glass-border:  rgba(142, 191, 162, 0.18);
+      --glass-shine:   rgba(255, 255, 255, 0.05);
+
+      --user-bubble:   linear-gradient(135deg, #2c6e49 0%, #1a5c44 100%);
+      --bot-bubble:    rgba(255, 255, 255, 0.06);
+      --bot-border:    rgba(142, 191, 162, 0.15);
+
+      --radius-sm:  8px;
+      --radius-md:  14px;
+      --radius-lg:  22px;
+      --radius-xl:  32px;
+
+      --shadow-card:   0 32px 80px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.3);
+      --shadow-bubble: 0 2px 12px rgba(0,0,0,0.2);
+
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--forest-deep);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .bg-canvas__image {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://photos.peopleimages.com/picture/202404/3047781-retro-artwork-and-line-with-color-creativity-and-artistic-with-textures-and-abstract-with-wave.-stripe-pattern-or-graphic-design-for-poster-or-wallpaper-with-paint-or-psychedelic-with-illustration-fit_400_400.jpg');
+      background-size: cover;
+      background-position: center;
+      filter: blur(3px) saturate(0.6);
+      transform: scale(1.06);
+    }
+
+    .bg-canvas__tint {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        160deg,
+        rgba(7, 30, 19, 0.88) 0%,
+        rgba(11, 42, 26, 0.82) 45%,
+        rgba(17, 66, 50, 0.75) 100%
+      );
+    }
+
+
+    .bg-canvas__texture {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 80%, rgba(44, 110, 73, 0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 85% 20%, rgba(212, 169, 67, 0.08) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(26, 92, 68, 0.1) 0%, transparent 70%);
+    }
+
+   
+    .chat-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      height: min(88vh, 800px);
+      min-height: 520px;
+
+      display: flex;
+      flex-direction: column;
+
+      background: var(--glass-bg);
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+
+  
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 12px; right: 12px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+        z-index: 2;
+        pointer-events: none;
+      }
+    }
+
+    
+    .chat-header {
+      padding: 20px 28px 18px;
+      border-bottom: 1px solid var(--glass-border);
+      background: linear-gradient(
+        135deg,
+        rgba(17, 66, 50, 0.6) 0%,
+        rgba(26, 92, 68, 0.4) 100%
+      );
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+  
+    .header-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--moss) 0%, var(--forest-rich) 100%);
+      border: 1px solid rgba(142, 191, 162, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .header-text {
+      flex: 1;
+    }
+
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--cream);
+      letter-spacing: 0.01em;
+      line-height: 1.25;
+    }
+
+    .header-subtitle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+
+   
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+      animation: pulse-dot 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.55); }
+      50%       { box-shadow: 0 0 0 5px rgba(74, 222, 128, 0); }
+    }
+
+    .status-label {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--mist);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .header-badge {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--gold);
+      background: rgba(212, 169, 67, 0.1);
+      border: 1px solid rgba(212, 169, 67, 0.25);
+      border-radius: 20px;
+      padding: 4px 11px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+
+
+      scrollbar-width: thin;
+      scrollbar-color: rgba(142, 191, 162, 0.2) transparent;
+    }
+
+    .chat-box::-webkit-scrollbar        { width: 4px; }
+    .chat-box::-webkit-scrollbar-track  { background: transparent; }
+    .chat-box::-webkit-scrollbar-thumb  {
+      background: rgba(142, 191, 162, 0.2);
+      border-radius: 4px;
+    }
+    .chat-box::-webkit-scrollbar-thumb:hover {
+      background: rgba(142, 191, 162, 0.4);
+    }
+
+    
+    .message {
+      max-width: 82%;
+      padding: 13px 17px;
+      border-radius: var(--radius-lg);
+      font-size: 0.92rem;
+      line-height: 1.65;
+      box-shadow: var(--shadow-bubble);
+      animation: bubble-in 0.35s var(--ease-out-expo) both;
+    }
+
+    @keyframes bubble-in {
+      from { opacity: 0; transform: translateY(10px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+
+    
+    .user-message {
+      align-self: flex-end;
+      background: var(--user-bubble);
+      color: rgba(255, 255, 255, 0.95);
+      border-bottom-right-radius: var(--radius-sm);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+    }
+
+   
+    .bot-message {
+      align-self: flex-start;
+      background: var(--bot-bubble);
+      border: 1px solid var(--bot-border);
+      color: var(--cream);
+      border-bottom-left-radius: var(--radius-sm);
+    }
+
+   
+    .bot-message h1,
+    .bot-message h2,
+    .bot-message h3 {
+      font-family: var(--font-display);
+      color: var(--mist);
+      margin: 12px 0 6px;
+      line-height: 1.3;
+      font-weight: 500;
+    }
+    .bot-message h1 { font-size: 1.15rem; }
+    .bot-message h2 { font-size: 1.05rem; }
+    .bot-message h3 { font-size: 0.96rem; font-style: italic; }
+
+    .bot-message p   { margin: 6px 0; }
+    .bot-message p:first-child { margin-top: 0; }
+    .bot-message p:last-child  { margin-bottom: 0; }
+
+    .bot-message ul,
+    .bot-message ol {
+      padding-left: 18px;
+      margin: 6px 0;
+    }
+    .bot-message li { margin: 4px 0; }
+
+    .bot-message strong {
+      color: var(--cream);
+      font-weight: 500;
+    }
+
+    .bot-message em {
+      color: var(--mist);
+      font-style: italic;
+    }
+
+    .bot-message blockquote {
+      border-left: 2px solid var(--bark);
+      margin: 8px 0;
+      padding: 4px 0 4px 14px;
+      color: var(--mist);
+      font-style: italic;
+    }
+
+    .bot-message code {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(142, 191, 162, 0.12);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: 0.84em;
+      font-family: 'Courier New', monospace;
+      color: var(--mist);
+    }
+
+    .bot-message pre {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(142, 191, 162, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    .bot-message pre code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .bot-message a {
+      color: var(--gold);
+      text-decoration: underline;
+      text-decoration-color: rgba(212, 169, 67, 0.4);
+      text-underline-offset: 3px;
+      transition: color 0.2s, text-decoration-color 0.2s;
+    }
+    .bot-message a:hover {
+      color: #f0c457;
+      text-decoration-color: rgba(240, 196, 87, 0.7);
+    }
+
+    .bot-message hr {
+      border: none;
+      border-top: 1px solid var(--bot-border);
+      margin: 10px 0;
+    }
+
+   
+    .thinking {
+      align-self: flex-start;
+      background: var(--bot-bubble);
+      border: 1px solid var(--bot-border);
+      border-bottom-left-radius: var(--radius-sm);
+      border-radius: var(--radius-lg);
+      border-bottom-left-radius: var(--radius-sm);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-bubble);
+      animation: bubble-in 0.3s var(--ease-out-expo) both;
+    }
+
+    .thinking span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--mist);
+      opacity: 0.3;
+      animation: dot-bounce 1.3s ease-in-out infinite;
+    }
+
+    .thinking span:nth-child(2) { animation-delay: 0.18s; }
+    .thinking span:nth-child(3) { animation-delay: 0.36s; }
+
+    @keyframes dot-bounce {
+      0%, 80%, 100% { opacity: 0.3;  transform: scale(1); }
+      40%           { opacity: 0.85; transform: scale(1.3); }
+    }
+
+   
+    .input-area {
+      padding: 14px 20px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--glass-border);
+      background: linear-gradient(
+        to top,
+        rgba(7, 30, 19, 0.5) 0%,
+        transparent 100%
+      );
+      flex-shrink: 0;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+   
+    #userInput {
+      width: 100%;
+      padding: 13px 18px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(142, 191, 162, 0.2);
+      border-radius: var(--radius-md);
+      color: var(--cream);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 300;
+      outline: none;
+      transition:
+        border-color 0.25s ease,
+        background 0.25s ease,
+        box-shadow 0.3s ease;
+      caret-color: var(--mist);
+
+      
+      &:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 40px rgba(17, 66, 50, 0.95) inset;
+        -webkit-text-fill-color: var(--cream);
+      }
+    }
+
+    #userInput::placeholder {
+      color: rgba(142, 191, 162, 0.45);
+      font-style: italic;
+    }
+
+    #userInput:focus {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(142, 191, 162, 0.5);
+      box-shadow: 0 0 0 3px rgba(79, 140, 106, 0.15), inset 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+
+    .send-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      border: 1px solid rgba(79, 140, 106, 0.4);
+      background: linear-gradient(135deg, var(--moss) 0%, var(--forest-rich) 100%);
+      color: rgba(255,255,255,0.9);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition:
+        transform 0.2s var(--ease-out-expo),
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+    }
+
+    .send-btn:hover {
+      background: linear-gradient(135deg, #3a7d59 0%, #22714f 100%);
+      border-color: rgba(79, 140, 106, 0.65);
+      box-shadow: 0 4px 16px rgba(44, 110, 73, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .send-btn:active {
+      transform: scale(0.95) translateY(0);
+      box-shadow: none;
+    }
+
+    .send-btn svg {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.2s var(--ease-out-expo);
+    }
+    .send-btn:hover svg {
+      transform: translate(1px, -1px);
+    }
+
+   
+    .input-hint {
+      text-align: center;
+      font-size: 0.67rem;
+      font-weight: 300;
+      color: rgba(142, 191, 162, 0.3);
+      letter-spacing: 0.04em;
+      padding: 0 20px 10px;
+      flex-shrink: 0;
+    }
+
+
+
+
+    @media (min-width: 720px) and (max-width: 1100px) {
+      .chat-container {
+        max-width: 600px;
+        height: min(85vh, 720px);
+      }
+    }
+
+  
+    @media (min-width: 1100px) {
+      .chat-container {
+        max-width: 720px;
+        height: min(82vh, 860px);
+      }
+    }
+
+   
+    @media (max-width: 480px) {
+      body { padding: 0; align-items: flex-end; }
+
+      .chat-container {
+        max-width: 100%;
+        height: 100svh;
+        border-radius: 0;
+        border: none;
+        border-top: 1px solid var(--glass-border);
+      }
+
+      .chat-header { padding: 18px 20px 14px; }
+      .chat-box    { padding: 16px 16px 12px; }
+      .input-area  { padding: 10px 14px 20px; }
+
+      .header-badge { display: none; }
+
+      .message { max-width: 90%; }
+    }
+
+   
+    @media (prefers-reduced-motion: reduce) {
+
+      .message,
+      .thinking,
+      .status-dot,
+      .thinking span,
+      .send-btn svg {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      
+      .chat-box {
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+
+  <div class="bg-canvas" aria-hidden="true">
+    <div class="bg-canvas__image"></div>
+    <div class="bg-canvas__tint"></div>
+    <div class="bg-canvas__texture"></div>
+  </div>
+
+  <div class="chat-container" role="main" aria-label="Hassan Tourism AI Assistant Chat">
+
+
+    <div class="chat-header">
+     
+      <div class="header-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 2C7 2 3 6.5 3 10.5C3 15.5 8 20 11 20C14 20 19 15.5 19 10.5C19 6.5 15 2 11 2Z" stroke="rgba(255,255,255,0.85)" stroke-width="1.4" fill="rgba(255,255,255,0.08)"/>
+          <path d="M11 6V11L14.5 13.5" stroke="rgba(255,255,255,0.7)" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="11" cy="11" r="1.5" fill="rgba(255,255,255,0.9)"/>
+        </svg>
+      </div>
+
+      <!-- Title & status -->
+      <div class="header-text">
+        <div class="header-title">Hassan Tourism AI</div>
+        <div class="header-subtitle">
+          <span class="status-dot" aria-label="Online"></span>
+          <span class="status-label">Online · Western Ghats Guide</span>
+        </div>
+      </div>
+
+      <div class="header-badge" aria-label="Coffee Country Heritage">☕ Coffee Country</div>
+    </div>
+
+    
+    <div class="chat-box" id="chatBox" role="log" aria-live="polite" aria-label="Chat messages">
+     
+      <div class="message bot-message">
+        <em>Namaskara!</em> Welcome to Hassan Tourism AI — your gateway to the misty Western Ghats, ancient Hoysala temples, and world-renowned coffee estates. How can I guide you today?
+      </div>
+    </div>
+
+  
+    <div class="input-area">
+      <div class="input-wrapper">
+        
+        <input
+          type="text"
+          id="userInput"
+          placeholder="Ask about temples, estates, itineraries…"
+          onkeypress="handleKeyPress(event)"
+          aria-label="Type your message"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      
+   
+      <button class="send-btn" onclick="sendMessage()" aria-label="Send message">
+       
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M17.5 2.5L9 11M17.5 2.5L12 17.5L9 11M17.5 2.5L2.5 7.5L9 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+   
+    <div class="input-hint" aria-hidden="true">
+      Powered by Hassan District Tourism · Karnataka Heritage
+    </div>
+
+  </div>
+
+
+  <script>
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    async function sendMessage() {
+      const inputField = document.getElementById('userInput');
+      const query = inputField.value.trim();
+      if (!query) return;
+
+      const chatBox = document.getElementById('chatBox');
+
+    
+      const userDiv = document.createElement('div');
+      userDiv.className = 'message user-message';
+      userDiv.textContent = query;
+      chatBox.appendChild(userDiv);
+
+      inputField.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+     
+      const thinkingDiv = document.createElement('div');
+      thinkingDiv.className = 'thinking';
+      thinkingDiv.id = 'thinkingIndicator';
+      thinkingDiv.setAttribute('aria-label', 'Hassan AI is thinking');
+      thinkingDiv.innerHTML = '<span></span><span></span><span></span>';
+      chatBox.appendChild(thinkingDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+       
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: query })
+        });
+        const data = await response.json();
+
+        const indicator = document.getElementById('thinkingIndicator');
+        if (indicator) indicator.remove();
+
+        
+        const botDiv = document.createElement('div');
+        botDiv.className = 'message bot-message';
+        botDiv.innerHTML = marked.parse(data.response);
+        chatBox.appendChild(botDiv);
+
+      } catch (error) {
+        const indicator = document.getElementById('thinkingIndicator');
+        if (indicator) indicator.remove();
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'message bot-message';
+        errorDiv.textContent = 'Something went wrong with the connection. Please try again.';
+        chatBox.appendChild(errorDiv);
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>

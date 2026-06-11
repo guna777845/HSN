@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hassan — Where Stone Breathes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='famous_places.css') }}">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:       #1a1714;
+      --parchment: #f5f0e8;
+      --stone:     #8c7b6e;
+      --gold:      #c9a96e;
+      --gold-light:#e8d5a3;
+      --smoke:     #d6cfc4;
+      --deep:      #2c2420;
+      --card-bg:   #fdf9f4;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--parchment);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.45;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(160deg, rgba(26,23,20,.88) 0%, rgba(44,36,32,.72) 55%, rgba(26,23,20,.55) 100%),
+        url('/static/place1.jpg') center/cover no-repeat;
+      transform: scale(1.04);
+      animation: heroZoom 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes heroZoom {
+      from { transform: scale(1.04); }
+      to   { transform: scale(1.12); }
+    }
+
+  
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.5rem 4rem;
+      transition: background .4s, backdrop-filter .4s;
+    }
+    nav.scrolled {
+      background: rgba(26,23,20,.78);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 300;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      text-decoration: none;
+    }
+
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-size: .78rem; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(245,240,232,.75); text-decoration: none;
+      transition: color .25s;
+    }
+    .nav-links a:hover { color: var(--gold-light); }
+
+    
+    .hero-content {
+      position: relative; z-index: 2;
+      text-align: center;
+      padding: 2rem;
+      animation: heroFade .9s ease both;
+    }
+    @keyframes heroFade {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: .72rem; letter-spacing: .32em; text-transform: uppercase;
+      color: var(--gold);
+      border-top: 1px solid var(--gold);
+      border-bottom: 1px solid var(--gold);
+      padding: .35rem 1.4rem;
+      margin-bottom: 2rem;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      font-weight: 300;
+      line-height: 1.0;
+      letter-spacing: -.01em;
+      color: var(--parchment);
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .hero-sub {
+      margin-top: 1.5rem;
+      font-size: clamp(.9rem, 1.5vw, 1.05rem);
+      font-weight: 300;
+      letter-spacing: .06em;
+      color: rgba(245,240,232,.62);
+      max-width: 480px;
+      margin-inline: auto;
+    }
+
+    .hero-cta {
+      display: inline-flex; align-items: center; gap: .7rem;
+      margin-top: 3rem;
+      font-size: .78rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--gold-light);
+      text-decoration: none;
+      border: 1px solid rgba(201,169,110,.45);
+      padding: .9rem 2.4rem;
+      border-radius: 2px;
+      transition: background .3s, color .3s;
+    }
+    .hero-cta:hover {
+      background: var(--gold);
+      color: var(--deep);
+    }
+    .hero-cta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  
+    .scroll-indicator {
+      position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+      z-index: 2; display: flex; flex-direction: column; align-items: center; gap: .5rem;
+      color: rgba(245,240,232,.4);
+      font-size: .68rem; letter-spacing: .18em; text-transform: uppercase;
+    }
+    .scroll-line {
+      width: 1px; height: 52px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%,100% { opacity: .3; transform: scaleY(1); }
+      50%      { opacity: 1;  transform: scaleY(.7); }
+    }
+
+ 
+    .intro {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 3rem;
+      padding: 5rem 8vw;
+      background: var(--deep);
+      overflow: hidden;
+    }
+    .intro::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+
+    .intro-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.2rem, 2vw, 1.6rem);
+      font-weight: 300;
+      line-height: 1.6;
+      color: var(--smoke);
+    }
+    .intro-text strong { color: var(--gold-light); font-weight: 400; }
+
+    .intro-divider {
+      width: 1px; height: 80px;
+      background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    }
+
+    .intro-stat { text-align: center; }
+    .intro-stat .num {
+      display: block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.5rem; font-weight: 300;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .intro-stat .label {
+      font-size: .72rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--stone); margin-top: .4rem;
+    }
+
+  
+    .section-header {
+      position: relative; z-index: 1;
+      padding: 6rem 8vw 3rem;
+      display: flex; align-items: flex-end; justify-content: space-between;
+    }
+
+    .section-tag {
+      font-size: .7rem; letter-spacing: .28em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: .8rem;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 300; line-height: 1.1;
+      color: var(--ink);
+    }
+    .section-title em { font-style: italic; color: var(--stone); }
+
+    .section-line {
+      flex: 1; margin-left: 3rem;
+      height: 1px;
+      background: linear-gradient(to right, var(--gold), transparent);
+      margin-bottom: .5rem;
+    }
+
+    /* ── PLACES GRID ── */
+    .places {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+      gap: 2px;
+      padding: 0 8vw 8rem;
+    }
+
+    
+    @media (min-width: 900px) {
+      .place:first-child { grid-column: span 2; }
+    }
+
+    .place {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--card-bg);
+      aspect-ratio: 4/3;
+    }
+    .place:first-child { aspect-ratio: 16/7; }
+
+    .place-img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .7s cubic-bezier(.25,.46,.45,.94);
+      display: block;
+    }
+
+    .place:hover .place-img { transform: scale(1.06); }
+
+    .place-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(26,23,20,.92) 0%,
+        rgba(26,23,20,.35) 50%,
+        rgba(26,23,20,.05) 100%
+      );
+      transition: background .4s;
+    }
+    .place:hover .place-overlay {
+      background: linear-gradient(
+        to top,
+        rgba(26,23,20,.95) 0%,
+        rgba(26,23,20,.55) 60%,
+        rgba(26,23,20,.1) 100%
+      );
+    }
+
+    .place-body {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 2rem 2rem 1.8rem;
+      transform: translateY(0);
+    }
+
+    .place-num {
+      font-size: .65rem; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: .5rem;
+      display: block;
+    }
+
+    .place-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.3rem, 2.5vw, 2rem);
+      font-weight: 400; line-height: 1.1;
+      color: var(--parchment);
+    }
+
+    .place-desc {
+      font-size: .82rem; line-height: 1.65; font-weight: 300;
+      color: rgba(245,240,232,.65);
+      margin-top: .7rem;
+      max-height: 0; overflow: hidden;
+      transition: max-height .5s ease, opacity .4s ease;
+      opacity: 0;
+    }
+    .place:hover .place-desc { max-height: 120px; opacity: 1; }
+
+    .place-arrow {
+      display: inline-flex; align-items: center; gap: .4rem;
+      margin-top: .9rem;
+      font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0; transform: translateX(-8px);
+      transition: opacity .35s .1s, transform .35s .1s;
+    }
+    .place:hover .place-arrow { opacity: 1; transform: translateX(0); }
+    .place-arrow svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+   
+    .badge {
+      position: absolute; top: 1.2rem; right: 1.2rem;
+      font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+      padding: .3rem .7rem;
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      backdrop-filter: blur(6px);
+      background: rgba(26,23,20,.4);
+      border-radius: 1px;
+    }
+
+
+    .quote-band {
+      position: relative; z-index: 1;
+      background: var(--ink);
+      padding: 5rem 8vw;
+      text-align: center;
+      overflow: hidden;
+    }
+    .quote-band::before, .quote-band::after {
+      content: '';
+      position: absolute; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+    .quote-band::before { top: 0; }
+    .quote-band::after  { bottom: 0; }
+
+    .quote-mark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 6rem; line-height: 0;
+      color: var(--gold);
+      opacity: .35; margin-bottom: 1rem;
+      display: block;
+    }
+
+    blockquote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 300; font-style: italic;
+      line-height: 1.5;
+      color: var(--smoke);
+      max-width: 720px; margin: 0 auto;
+    }
+
+    .quote-author {
+      display: block; margin-top: 1.5rem;
+      font-size: .72rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--stone);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      background: var(--deep);
+      padding: 3.5rem 8vw;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1.5rem;
+    }
+    footer::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem; font-weight: 300;
+      letter-spacing: .22em; text-transform: uppercase;
+      color: var(--gold-light);
+    }
+
+    .footer-copy {
+      font-size: .72rem; letter-spacing: .1em;
+      color: var(--stone);
+    }
+
+
+    @media (max-width: 768px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-links { display: none; }
+      .intro {
+        grid-template-columns: 1fr;
+        padding: 3rem 6vw;
+        gap: 2rem;
+      }
+      .intro-divider { display: none; }
+      .places { padding: 0 0 5rem; gap: 2px; }
+      .section-header { padding: 4rem 6vw 2rem; flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .section-line { display: none; }
+      footer { flex-direction: column; text-align: center; }
+    } 
+  </style>
+</head>
+<body>
+
+  
+  <nav id="navbar">
+    <a href="#" class="nav-logo">Hassan</a>
+    <ul class="nav-links">
+      <li><a href="#">Explore</a></li>
+      <li><a href="#">Heritage</a></li>
+      <li><a href="#">Plan Visit</a></li>
+      <li><a href="#">Gallery</a></li>
+    </ul>
+  </nav>
+
+  
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <span class="hero-eyebrow">Karnataka, India</span>
+      <h1 class="hero-title">
+        Where<br/><em>Stone Breathes</em>
+      </h1>
+      <p class="hero-sub">A thousand years of devotion carved into temple walls — Hassan's heritage awaits.</p>
+      <a href="#places" class="hero-cta">
+        Discover Places
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div class="scroll-indicator">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  
+  <div class="intro">
+    <p class="intro-text">
+      Hassan district shelters some of India's most extraordinary <strong>Hoysala temples</strong> — 
+      architectural marvels that predate the Mughal era by centuries, now recognised by UNESCO.
+    </p>
+    <div class="intro-divider"></div>
+    <div style="display:flex;gap:3rem;justify-content:center">
+      <div class="intro-stat">
+        <span class="num">12<sup style="font-size:.5em">th</sup></span>
+        <span class="label">Century Legacy</span>
+      </div>
+      <div class="intro-stat">
+        <span class="num">6</span>
+        <span class="label">Iconic Sites</span>
+      </div>
+    </div>
+  </div>
+
+ 
+  <div class="section-header" id="places">
+    <div>
+      <p class="section-tag">Curated Destinations</p>
+      <h2 class="section-title">Famous Places<br/><em>in Hassan</em></h2>
+    </div>
+    <div class="section-line"></div>
+  </div>
+
+  
+  <main>
+    <section class="places">
+
+      <article class="place">
+        <img class="place-img" src="/static/place1.jpg" alt="Belur Chennakeshava Temple" loading="lazy"/>
+        <div class="place-overlay"></div>
+        <span class="badge">UNESCO Heritage</span>
+        <div class="place-body">
+          <span class="place-num">01</span>
+          <h3 class="place-title">Belur Chennakeshava Temple</h3>
+          <p class="place-desc">A masterpiece of Hoysala craftsmanship, its outer walls densely covered with over 650 intricately carved friezes — deities, dancers, elephants, and celestial beings frozen in eternal stone.</p>
+          <span class="place-arrow">
+            Explore
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </article>
+
+      <article class="place">
+        <img class="place-img" src="/static/place2.jpg" alt="Halebidu Hoysaleswara Temple" loading="lazy"/>
+        <div class="place-overlay"></div>
+        <span class="badge">UNESCO Heritage</span>
+        <div class="place-body">
+          <span class="place-num">02</span>
+          <h3 class="place-title">Halebidu Hoysaleswara Temple</h3>
+          <p class="place-desc">The ancient capital of the Hoysala Empire, home to twin temples whose friezes narrate Hindu epics in extraordinary sculptural relief — a pilgrimage for art lovers and historians alike.</p>
+          <span class="place-arrow">
+            Explore
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </article>
+
+      <article class="place">
+        <img class="place-img" src="/static/place3.jpg" alt="Shettihalli Church Ruins" loading="lazy"/>
+        <div class="place-overlay"></div>
+        <div class="place-body">
+          <span class="place-num">03</span>
+          <h3 class="place-title">Shettihalli Church Ruins</h3>
+          <p class="place-desc">A submerged Gothic relic that rises from the Hemavathi reservoir each monsoon season, its haunting arches reflected in still water — one of Karnataka's most atmospheric sights.</p>
+          <span class="place-arrow">
+            Explore
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </article>
+
+      <article class="place">
+        <img class="place-img" src="/static/place4.jpg" alt="Hemavathi Reservoir" loading="lazy"/>
+        <div class="place-overlay"></div>
+        <div class="place-body">
+          <span class="place-num">04</span>
+          <h3 class="place-title">Hemavathi Reservoir</h3>
+          <p class="place-desc">Serene waters flanked by the Western Ghats' green foothills — a sanctuary for migratory birds and a beloved escape where the horizon softens into emerald hills at dusk.</p>
+          <span class="place-arrow">
+            Explore
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </article>
+
+      <article class="place">
+        <img class="place-img" src="/static/place5.jpg" alt="Manjarabad Fort" loading="lazy"/>
+        <div class="place-overlay"></div>
+        <div class="place-body">
+          <span class="place-num">05</span>
+          <h3 class="place-title">Manjarabad Fort</h3>
+          <p class="place-desc">Tipu Sultan's star-shaped star fort crowns a 920-metre hill, its geometric ramparts offering panoramic views across a rippling ocean of forested valleys and coffee estates.</p>
+          <span class="place-arrow">
+            Explore
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </article>
+
+      <article class="place">
+        <img class="place-img" src="/static/place6.jpg" alt="Shravanabelagola Gommateshvara" loading="lazy"/>
+        <div class="place-overlay"></div>
+        <div class="place-body">
+          <span class="place-num">06</span>
+          <h3 class="place-title">Shravanabelagola Gommateshvara</h3>
+          <p class="place-desc">Atop Vindhyagiri Hill stands the world's tallest monolithic statue — the 18-metre Bahubali, carved from a single granite outcrop in 981 CE, commanding silence across the plains.</p>
+          <span class="place-arrow">
+            Explore
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+      </article>
+
+    </section>
+  </main>
+
+ 
+  <div class="quote-band">
+    <span class="quote-mark">&ldquo;</span>
+    <blockquote>
+      No photograph can capture what it feels to stand before Belur at dawn — 
+      when the first light touches the carvings and a thousand gods wake at once.
+    </blockquote>
+    <span class="quote-author">— A Traveller's Journal, Hassan</span>
+  </div>
+
+
+  <footer>
+    <span class="footer-logo">Hassan Tourism</span>
+    <span class="footer-copy">&copy; 2023 Hassan Tourism. All rights reserved.</span>
+  </footer>
+
+  <script>
+    
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+  
+    const cards = document.querySelectorAll('.place');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          entry.target.style.animation =
+            `cardIn .6s cubic-bezier(.22,.61,.36,1) ${i * 0.07}s both`;
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    cards.forEach(c => observer.observe(c));
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes cardIn {
+        from { opacity: 0; transform: translateY(28px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .place { opacity: 0; }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
